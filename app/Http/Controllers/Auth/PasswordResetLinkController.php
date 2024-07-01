@@ -28,7 +28,7 @@ class PasswordResetLinkController extends Controller
 
         $input_type = filter_var(
             $request->input('input_type'), FILTER_VALIDATE_EMAIL
-            ) ? 'email' : 'useraname';
+            ) ? 'email' : 'username';
             $request->merge([$input_type => $request->input('input_type')]);
 
         $request->validate([
@@ -43,12 +43,17 @@ class PasswordResetLinkController extends Controller
             $request->only($input_type)
         );
 
-        if ($status == Password::RESET_LINK_SENT) {
-            return back()->with('status', __($status));
-        }
+        return $status == Password::RESET_LINK_SENT
+                            ? back()->with('status', __($status))
+                            : back()->withInput($request->only($input_type))
+                                    ->withErrors([$input_type => __($status)]);
 
-        throw ValidationException::withMessages([
-            $input_type => [trans($status)],
-        ]);
+        // if ($status == Password::RESET_LINK_SENT) {
+        //     return back()->with('status', __($status));
+        // }
+
+        // throw ValidationException::withMessages([
+        //     $input_type => [trans($status)],
+        // ]);
     }
 }
